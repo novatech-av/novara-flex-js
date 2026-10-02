@@ -101,9 +101,48 @@ describe("NovaraFlexClient configuration", () => {
       new NovaraFlexClient({
         token: TOKEN,
         fetch,
+        baseUrl: "https://example.test/v1/",
+      }).baseUrl,
+    ).toBe("https://example.test/v1");
+    expect(
+      new NovaraFlexClient({
+        token: TOKEN,
+        fetch,
         baseUrl: "https://example.test/v1///",
       }).baseUrl,
     ).toBe("https://example.test/v1");
+  });
+
+  it("leaves a base URL without a trailing slash unchanged", () => {
+    const { fetch } = fakeFetch(() => jsonResponse({ ok: true }));
+    expect(
+      new NovaraFlexClient({
+        token: TOKEN,
+        fetch,
+        baseUrl: "https://example.test/v1",
+      }).baseUrl,
+    ).toBe("https://example.test/v1");
+  });
+
+  it("trims a long run of slashes from the base URL in linear time", () => {
+    const { fetch } = fakeFetch(() => jsonResponse({ ok: true }));
+    const slashes = "/".repeat(50_000);
+    const started = Date.now();
+    expect(
+      new NovaraFlexClient({
+        token: TOKEN,
+        fetch,
+        baseUrl: `https://example.test/v1${slashes}x`,
+      }).baseUrl,
+    ).toBe(`https://example.test/v1${slashes}x`);
+    expect(
+      new NovaraFlexClient({
+        token: TOKEN,
+        fetch,
+        baseUrl: `https://example.test/v1${slashes}`,
+      }).baseUrl,
+    ).toBe("https://example.test/v1");
+    expect(Date.now() - started).toBeLessThan(500);
   });
 
   it("rejects an empty or non-string base URL", () => {
