@@ -16,4 +16,4 @@ export const SDK_NAME = "novara-flex-js" as const;
  * package.json (`pnpm version-packages` runs it); don't edit it by hand.
  * `src/version.test.ts` fails if the two ever differ.
  */
-export const SDK_VERSION = "0.0.0" as const;
+export const SDK_VERSION = "0.1.0" as const;

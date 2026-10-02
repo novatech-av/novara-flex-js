@@ -1,6 +1,6 @@
 {
   "name": "novara-flex-js",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Unofficial TypeScript SDK for the Novara Flex API",
   "keywords": [
     "novara",
