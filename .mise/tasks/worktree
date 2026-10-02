@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+#MISE description="Create and initialize a Git worktree"
+#USAGE arg "<branch>" help="Branch to check out or create"
+#USAGE arg "[path]" help="Optional worktree path"
+
+set -euo pipefail
+
+BRANCH="${usage_branch?}"
+REQUESTED_PATH="${usage_path:-}"
+
+git rev-parse --git-dir >/dev/null 2>&1 || {
+  echo "Error: not inside a Git repository." >&2
+  exit 1
+}
+
+# Validate the branch name before doing anything.
+git check-ref-format --branch "$BRANCH" >/dev/null
+
+#
+# Find primary worktree.
+#
+
+PRIMARY_WORKTREE="$(
+  git worktree list --porcelain |
+    awk '/^worktree / { print substr($0, 10); exit }'
+)"
+
+if [[ -z "$PRIMARY_WORKTREE" || ! -d "$PRIMARY_WORKTREE" ]]; then
+  echo "Error: could not determine the primary worktree." >&2
+  exit 1
+fi
+
+PRIMARY_WORKTREE="$(cd "$PRIMARY_WORKTREE" && pwd -P)"
+
+#
+# See whether this branch already has a worktree.
+#
+
+EXISTING_WORKTREE="$(
+  git worktree list --porcelain |
+    awk -v branch="refs/heads/$BRANCH" '
+      /^worktree / {
+        path = substr($0, 10)
+      }
+
+      /^branch / {
+        current_branch = substr($0, 8)
+
+        if (current_branch == branch) {
+          print path
+          exit
+        }
+      }
+    '
+)"
+
+if [[ -n "$EXISTING_WORKTREE" ]]; then
+
+  TARGET="$(cd "$EXISTING_WORKTREE" && pwd -P)"
+
+  echo "Worktree already exists for $BRANCH:"
+  echo "  $TARGET"
+
+else
+
+  #
+  # Determine destination.
+  #
+
+  BRANCH_SLUG="${BRANCH//\//-}"
+
+  if [[ -n "$REQUESTED_PATH" ]]; then
+    TARGET="$REQUESTED_PATH"
+  else
+    TARGET="$(dirname "$PRIMARY_WORKTREE")/${BRANCH_SLUG}"
+  fi
+
+  #
+  # Refresh remote refs before deciding what kind of branch this is.
+  #
+
+  echo "Fetching origin..."
+  git fetch origin --prune
+
+  #
+  # 1. Existing local branch
+  #
+  if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+
+    echo "Creating worktree from existing local branch $BRANCH..."
+
+    git worktree add \
+      "$TARGET" \
+      "$BRANCH"
+
+  #
+  # 2. Existing remote branch
+  #
+  elif git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+
+    echo "Creating local tracking branch from origin/$BRANCH..."
+
+    git worktree add \
+      --track \
+      -b "$BRANCH" \
+      "$TARGET" \
+      "origin/$BRANCH"
+
+  #
+  # 3. Brand-new branch
+  #
+  else
+
+    if ! git show-ref --verify --quiet "refs/remotes/origin/main"; then
+      echo "Error: origin/main does not exist." >&2
+      exit 1
+    fi
+
+    echo "Creating new branch $BRANCH from origin/main..."
+
+    git worktree add \
+      -b "$BRANCH" \
+      "$TARGET" \
+      origin/main
+  fi
+
+  TARGET="$(cd "$TARGET" && pwd -P)"
+fi
+
+#
+# Delegate ALL worktree setup to the initializer.
+#
+
+echo
+echo "Initializing worktree..."
+
+mise run worktree-init "$TARGET"
+
+echo
+echo "Done."
+echo "  Branch: $BRANCH"
+echo "  Path:   $TARGET"
+echo
+echo "cd \"$TARGET\""

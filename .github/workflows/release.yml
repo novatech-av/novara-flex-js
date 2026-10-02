@@ -1,0 +1,237 @@
+# Publishes novara-flex-js to npm when package.json on main carries a version
+# npm doesn't have yet, then tags it `v<version>` and creates a GitHub release
+# from that version's CHANGELOG.md section. See docs/releasing.md.
+#
+# npm authenticates the publish through trusted publishing (GitHub's OIDC
+# token), which also signs provenance. This workflow holds no npm token and
+# reads no secrets; never add one.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Dry run (npm publish --dry-run; no tag, no release)
+        type: boolean
+        default: true
+
+# One release at a time, never cancelled mid-run. The group must differ from
+# ci.yml's, which evaluates to "Release-<ref>" when this workflow calls it.
+concurrency:
+  group: npm-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.decide.outputs.version }}
+      published: ${{ steps.decide.outputs.published }}
+      publish: ${{ steps.decide.outputs.publish }}
+      dry_run: ${{ steps.decide.outputs.dry_run }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node from mise.toml
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+
+      - name: Decide whether to publish
+        id: decide
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          name=$(node -p 'require("./package.json").name')
+          version=$(node -p 'require("./package.json").version')
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::package.json version '$version' is not a semver version"
+            exit 1
+          fi
+
+          # A version npm doesn't have is a 404 (E404), both for a package that
+          # was never published and for a missing version of one that was. Any
+          # other failure stops the run rather than guessing.
+          view="$RUNNER_TEMP/npm-view.json"
+          if npm view "$name@$version" version --json > "$view" 2> "$RUNNER_TEMP/npm-view.err"; then
+            if [[ "$(jq -r . "$view")" != "$version" ]]; then
+              echo "::error::npm view returned unexpected output for $name@$version"
+              cat "$view"
+              exit 1
+            fi
+            published=true
+          elif jq -e '.error.code == "E404"' "$view" > /dev/null 2>&1; then
+            published=false
+          else
+            cat "$RUNNER_TEMP/npm-view.err" >&2
+            echo "::error::npm view $name@$version failed"
+            exit 1
+          fi
+
+          # Only a version `pnpm version-packages` produced is a release: it has
+          # a CHANGELOG.md section. That keeps the unreleased 0.0.0 off npm.
+          released=false
+          if [[ -f CHANGELOG.md ]] && grep -qxF "## $version" CHANGELOG.md; then
+            released=true
+          fi
+
+          dry_run=false
+          if [[ "$DRY_RUN" == true ]]; then dry_run=true; fi
+
+          publish=false
+          if [[ "$published" == false && "$dry_run" == false ]]; then
+            if [[ "$released" == false ]]; then
+              echo "::notice::$version has no CHANGELOG.md section, so it isn't a release; nothing to publish"
+            elif [[ "$GITHUB_REF" != refs/heads/main ]]; then
+              echo "::error::Only main publishes; run a dry run from $GITHUB_REF instead"
+              exit 1
+            else
+              publish=true
+            fi
+          fi
+
+          {
+            echo "version=$version"
+            echo "published=$published"
+            echo "publish=$publish"
+            echo "dry_run=$dry_run"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "### $name@$version"
+            echo
+            echo "- Already on npm: $published"
+            echo "- Has a CHANGELOG.md section: $released"
+            echo "- Publish: $publish"
+            echo "- Dry run: $dry_run"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  ci:
+    name: CI
+    needs: check
+    if: needs.check.outputs.publish == 'true' || needs.check.outputs.dry_run == 'true'
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  publish:
+    name: Publish to npm
+    needs: [check, ci]
+    if: needs.check.outputs.publish == 'true' || needs.check.outputs.dry_run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: npm
+    permissions:
+      contents: write # create the v<version> tag and the GitHub release
+      id-token: write # npm trusted publishing and provenance
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+      PUBLISHED: ${{ needs.check.outputs.published }}
+      DRY_RUN: ${{ needs.check.outputs.dry_run }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # No tool or dependency cache in the job that publishes.
+      - name: Set up Node and pnpm from mise.toml
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+        with:
+          cache: false
+
+      - name: Show the tool versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run clean && pnpm run build
+
+      - name: Confirm the version
+        run: |
+          actual=$(node -p 'require("./package.json").version')
+          if [[ "$actual" != "$VERSION" ]]; then
+            echo "::error::package.json is at $actual, but the check job decided on $VERSION"
+            exit 1
+          fi
+
+      - name: Extract the release notes
+        run: |
+          notes="$RUNNER_TEMP/release-notes.md"
+          awk -v heading="## $VERSION" '
+            $0 == heading { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > "$notes" 2> /dev/null || true
+          if [[ ! -s "$notes" ]]; then
+            if [[ "$DRY_RUN" == true ]]; then
+              echo "::warning::CHANGELOG.md has no '## $VERSION' section; a real release would stop here"
+            else
+              echo "::error::CHANGELOG.md has no '## $VERSION' section"
+              exit 1
+            fi
+          fi
+
+      - name: Check that the tag is free
+        if: env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/v$VERSION" --silent 2> /dev/null; then
+            echo "::error::Tag v$VERSION already exists"
+            exit 1
+          fi
+
+      # Trusted publishing: npm exchanges the job's OIDC token for a short-lived
+      # publish token, and signs provenance because the repository and package
+      # are public (publishConfig.provenance makes a publish without it fail).
+      - name: Publish
+        if: env.DRY_RUN != 'true'
+        run: npm publish
+
+      - name: Create the tag and the GitHub release
+        if: env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "v$VERSION"
+          --repo "$GITHUB_REPOSITORY"
+          --target "$GITHUB_SHA"
+          --title "v$VERSION"
+          --notes-file "$RUNNER_TEMP/release-notes.md"
+
+      # A dry run packs and checks what npm publish would and attempts the OIDC
+      # token exchange; "requires you to be logged in" in its output means the
+      # exchange failed. npm skips the upload and provenance signing, so a dry
+      # run proves neither.
+      - name: Publish (dry run)
+        if: env.DRY_RUN == 'true'
+        run: |
+          args=(--dry-run)
+          if [[ "$PUBLISHED" == true ]]; then
+            # npm refuses to republish a version even in a dry run; --force
+            # skips only that check, and a dry run uploads nothing.
+            echo "::notice::$VERSION is already on npm; the dry run uses --force"
+            args+=(--force)
+          fi
+          npm publish "${args[@]}"
+
+      - name: Show what a real run would do (dry run)
+        if: env.DRY_RUN == 'true'
+        run: |
+          echo "A real run would publish novara-flex-js@$VERSION with provenance,"
+          echo "then create the tag v$VERSION at $GITHUB_SHA and a GitHub release"
+          echo "titled v$VERSION with these notes:"
+          echo "-----"
+          cat "$RUNNER_TEMP/release-notes.md"

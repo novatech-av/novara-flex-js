@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Test output
+coverage/
+
+# Packaged tarballs
+*.tgz
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Maintainer-only Claude Code notes
+CLAUDE.local.md
+
+# Editor / OS cruft
+.DS_Store
+.idea/
+.vscode/
+*.swp

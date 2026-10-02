@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": [],
+    "skipLibCheck": false,
+    "strict": true,
+    "noEmit": true
+  },
+  "files": ["esm.mts", "cjs.cts"]
+}

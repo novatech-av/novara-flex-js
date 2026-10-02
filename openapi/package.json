@@ -1,0 +1,13 @@
+{
+  "name": "@novara-flex-js/openapi-codegen",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Type generation for the checked-in Novara Flex OpenAPI contract",
+  "type": "module",
+  "scripts": {
+    "generate": "openapi-typescript novara-flex-openapi-3.1.yaml --output ../src/generated/openapi.ts --alphabetize"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0"
+  }
+}

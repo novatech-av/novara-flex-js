@@ -1,0 +1,15 @@
+# "." lists the root (the SDK) explicitly: pnpm always includes it, but
+# Changesets only versions packages the workspace config names.
+packages:
+  - "."
+  - "openapi"
+
+# openapi-typescript prints its output with the JavaScript TypeScript compiler
+# API, which the TypeScript 7 native package no longer ships, so it needs its
+# own TypeScript 5. Keeping the generator in the `openapi` package and resolving
+# peers per package (instead of from the workspace root) gives it TypeScript 5
+# while the SDK itself keeps TypeScript 7.
+resolvePeersFromWorkspaceRoot: false
+
+overrides:
+  "openapi-typescript>typescript": "^5.9.0"

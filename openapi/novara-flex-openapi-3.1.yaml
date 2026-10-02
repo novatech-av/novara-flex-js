@@ -1,0 +1,5697 @@
+openapi: 3.1.0
+info:
+  title: Novara Flex (KPA Flex) API
+  version: v1-unofficial-2026-09-29
+  description: 'Unofficial OpenAPI 3.1 specification derived from the public Novara Flex API documentation. The upstream API
+    uses a JSON-RPC-style convention over method-specific HTTPS URLs. Every documented method accepts GET or POST; this specification
+    models POST because POST uses a normal JSON request body and is compatible with OpenAPI tooling. For GET, Novara Flex
+    expects a URL-encoded raw JSON object as the entire query string, a convention OpenAPI cannot model faithfully. Authentication
+    is a `token` field inside every request object rather than an HTTP Authorization header, so no OpenAPI securityScheme
+    is declared. The published protocol states that application-level failures are also returned with HTTP 200 and `ok: false`.
+    This file is not an official Novara/KPA artifact; verify critical fields against the linked upstream method documentation
+    before production use. Re-checked against the published method documentation on 2026-09-29: every documented request
+    parameter is declared, and documented response properties missing until then were added as optional, with their types
+    checked on the live API wherever records were available (the live API wins where the two disagree). The `required`
+    lists of the response schemas come from live observation: a property is required only where every observed record
+    from every method that returns its schema carried it, and present-but-null counts as present, so a nullable property
+    can be required. A schema observed too rarely to judge has only its identity fields required, a shape not yet
+    observed on the wire has none, and a property that appears only behind a request flag stays optional.'
+externalDocs:
+  description: Official Novara Flex API documentation
+  url: https://api.novaraflex.com/docs/
+servers:
+- url: https://api.novaraflex.com/v1
+  description: Novara Flex production API
+tags:
+- name: account
+- name: acknowledgments
+- name: api
+- name: attachment
+- name: companies
+- name: completedtrainings
+- name: contractor-contacts
+- name: contractor-requirement
+- name: contractor-requirements
+- name: contractors
+- name: datalistitems
+- name: datalists
+- name: dataload
+- name: driver-qualifications
+- name: equipments
+- name: equipmenttypes
+- name: establishments
+- name: fieldoffices
+- name: followups
+- name: formfolders
+- name: forms
+- name: grouptrainings
+- name: inspections
+- name: jobtitles
+- name: linesofbusiness
+- name: osha-hours
+- name: projects
+- name: resources
+- name: resourcetags
+- name: responses
+- name: roles
+- name: training-employee-status
+- name: trainings
+- name: users
+paths:
+  /account.info:
+    post:
+      tags:
+      - account
+      summary: Get account information
+      description: Returns details for the organization associated with the API token.
+      operationId: accountInfo
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/account.info
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    account:
+                      $ref: '#/components/schemas/Account'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - account
+                - $ref: '#/components/schemas/ApiError'
+  /acknowledgments.info:
+    post:
+      tags:
+      - acknowledgments
+      summary: Get acknowledgment
+      description: Returns details of an acknowledgment and its recipients.
+      operationId: acknowledgmentsInfo
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/acknowledgments.info
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                id:
+                  type: string
+                  description: Acknowledgment ID.
+                  example: 5804f0f30ef50473af5870c6
+              required:
+              - token
+              - id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              id: 5804f0f30ef50473af5870c6
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    acknowledgment:
+                      $ref: '#/components/schemas/Acknowledgment'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - acknowledgment
+                - $ref: '#/components/schemas/ApiError'
+  /acknowledgments.list:
+    post:
+      tags:
+      - acknowledgments
+      summary: List acknowledgments
+      description: Returns acknowledgments sent by the organization.
+      operationId: acknowledgmentsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/acknowledgments.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    acknowledgments:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Acknowledgment'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - acknowledgments
+                - $ref: '#/components/schemas/ApiError'
+  /api.echo:
+    post:
+      tags:
+      - api
+      summary: Echo request data
+      description: Testing method that echoes the object provided in the response property.
+      operationId: apiEcho
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/api.echo
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                response:
+                  type: object
+                  additionalProperties: true
+                  description: Object to echo as the API response. Any JSON object is accepted; the API returns it as the entire
+                    response body.
+                  example:
+                    ok: true
+                    foo: bar
+              required:
+              - token
+              - response
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              response:
+                ok: true
+                foo: bar
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties: {}
+                  additionalProperties: true
+                  description: Arbitrary object echoed by the API.
+                - $ref: '#/components/schemas/ApiError'
+  /api.ping:
+    post:
+      tags:
+      - api
+      summary: Ping API
+      description: Verifies API health, connectivity, and token validity.
+      operationId: apiPing
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/api.ping
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                  additionalProperties: true
+                  required:
+                  - ok
+                - $ref: '#/components/schemas/ApiError'
+  /attachment.load:
+    post:
+      tags:
+      - attachment
+      summary: Load attachment
+      description: Loads an uploaded attachment. Published docs describe this request as being redirected to binary data.
+        Observed on the live API 2026-09-29, a known key answers HTTP 302 with a cross-origin https Location whose GET
+        serves the file, while an unknown key answers HTTP 200 with an application/json error envelope, error
+        invalid_key_for_customer.
+      operationId: attachmentLoad
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/attachment.load
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                key:
+                  type: string
+                  description: Attachment storage key.
+                  example: 33703da906bc12e595c499f0/public/elhz928rva67x255/photo.jpg
+              required:
+              - token
+              - key
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              key: 33703da906bc12e595c499f0/public/elhz928rva67x255/photo.jpg
+      responses:
+        '200':
+          description: Binary attachment or an application-level JSON error. On the live API only the JSON error has been
+            seen with HTTP 200; a known key answered 302 (see below), and the binary media types here describe the file
+            that redirect leads to.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '302':
+          description: Redirect to the attachment's binary data, observed on the live API 2026-09-29. The Location is a
+            cross-origin https URL that serves the file to a GET without a body. A client must not let a 307 or 308
+            re-send the POST body, which carries the token, to that origin.
+          headers:
+            Location:
+              description: The file's URL. Treat it as a credential; it may be signed.
+              schema:
+                type: string
+  /companies.list:
+    post:
+      tags:
+      - companies
+      summary: List companies
+      description: Returns companies listed for the organization.
+      operationId: companiesList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/companies.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    companies:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Company'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - companies
+                - $ref: '#/components/schemas/ApiError'
+  /completedtrainings.v2.list:
+    post:
+      tags:
+      - completedtrainings
+      summary: List completed trainings
+      description: Returns training completion records, sorted most recent first.
+      operationId: completedtrainingsV2List
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/completedtrainings.v2.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                training_id:
+                  type: integer
+                  description: Filter by training ID.
+                  example: 1024
+                user_id:
+                  type: string
+                  description: Filter by user ID.
+                  example: C906DA7B026376DA7B02BB12
+                has_attachments:
+                  type: boolean
+                  description: When true, only records with attachments; when false, only records without attachments.
+                  example: true
+                limit:
+                  type: integer
+                  default: 100
+                  minimum: 1
+                  maximum: 1000
+                  description: Maximum records returned.
+                  example: 100
+                page:
+                  type: integer
+                  default: 1
+                  minimum: 1
+                  description: 1-based page number.
+                  example: 1
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              training_id: 1024
+              user_id: C906DA7B026376DA7B02BB12
+              has_attachments: true
+              limit: 100
+              page: 1
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    completedtrainings:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/CompletedTraining'
+                    paging:
+                      $ref: '#/components/schemas/Paging'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - completedtrainings
+                  - paging
+                - $ref: '#/components/schemas/ApiError'
+  /contractor-contacts.list:
+    post:
+      tags:
+      - contractor-contacts
+      summary: List contractor contacts
+      description: Returns contacts for a contractor.
+      operationId: contractorContactsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/contractor-contacts.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                contractor_id:
+                  type: string
+                  description: Contractor ID.
+                  example: D2EEA9E5-3E10-44BC-92EC-50B587B83019
+                only_mine:
+                  type: boolean
+                  default: false
+                  description: Exclude contacts created by other Novara clients when true.
+                  example: true
+              required:
+              - token
+              - contractor_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              contractor_id: D2EEA9E5-3E10-44BC-92EC-50B587B83019
+              only_mine: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    contacts:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ContractorContact'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - contacts
+                - $ref: '#/components/schemas/ApiError'
+  /contractor-requirement.info:
+    post:
+      tags:
+      - contractor-requirement
+      summary: Get contractor requirement status
+      description: Returns contractor statuses for a specific requirement.
+      operationId: contractorRequirementInfo
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/contractor-requirement.info
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                requirement_id:
+                  type: string
+                  description: Requirement ID.
+                  example: 2D50433E-F36B-1410-8C82-006D55A93A8F
+              required:
+              - token
+              - requirement_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              requirement_id: 2D50433E-F36B-1410-8C82-006D55A93A8F
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    requirement_id:
+                      type: string
+                    contractors:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          contractor_id:
+                            type: string
+                          name:
+                            type: string
+                          status:
+                            type: string
+                            description: 'Values in the docs example: Pending Submission, Approved. Not an enum.'
+                        additionalProperties: true
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - requirement_id
+                  - contractors
+                - $ref: '#/components/schemas/ApiError'
+  /contractor-requirements.list:
+    post:
+      tags:
+      - contractor-requirements
+      summary: List contractor requirements
+      description: Returns contractor requirements.
+      operationId: contractorRequirementsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/contractor-requirements.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                limit:
+                  type: integer
+                  default: 100
+                  minimum: 1
+                  maximum: 500
+                  description: Maximum requirements returned.
+                  example: 100
+                page:
+                  type: integer
+                  default: 1
+                  minimum: 1
+                  description: 1-based page number.
+                  example: 1
+                type:
+                  type: string
+                  enum:
+                  - Upload
+                  - Form
+                  - Signoff
+                  - Training
+                  description: Filter by requirement type.
+                  example: Training
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              limit: 100
+              page: 1
+              type: Training
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    requirements:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ContractorRequirement'
+                    paging:
+                      $ref: '#/components/schemas/Paging'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - requirements
+                  - paging
+                - $ref: '#/components/schemas/ApiError'
+  /contractors.list:
+    post:
+      tags:
+      - contractors
+      summary: List contractors
+      description: Returns contractors listed for the organization.
+      operationId: contractorsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/contractors.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                limit:
+                  type: integer
+                  default: 100
+                  minimum: 1
+                  maximum: 1000
+                  description: Maximum contractors returned.
+                  example: 100
+                page:
+                  type: integer
+                  default: 1
+                  minimum: 1
+                  description: 1-based page number.
+                  example: 1
+                status:
+                  type: string
+                  enum:
+                  - new
+                  - pending
+                  - approved
+                  - denied
+                  description: Filter by approval status.
+                  example: new
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              limit: 100
+              page: 1
+              status: new
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    contractors:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Contractor'
+                    paging:
+                      $ref: '#/components/schemas/Paging'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - contractors
+                  - paging
+                - $ref: '#/components/schemas/ApiError'
+  /datalistitems.list:
+    post:
+      tags:
+      - datalistitems
+      summary: List data-list items
+      description: Returns items from a custom data list.
+      operationId: datalistitemsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/datalistitems.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                data_list_id:
+                  type: integer
+                  description: Data-list ID.
+                  example: 324
+                include_deleted:
+                  type: boolean
+                  default: false
+                  description: Include deleted items.
+                  example: false
+                include_inactive:
+                  type: boolean
+                  default: false
+                  description: Include inactive items.
+                  example: false
+              required:
+              - token
+              - data_list_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              data_list_id: 324
+              include_deleted: false
+              include_inactive: false
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    datalistitems:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/DataListItem'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - datalistitems
+                - $ref: '#/components/schemas/ApiError'
+  /datalists.list:
+    post:
+      tags:
+      - datalists
+      summary: List custom data lists
+      description: Returns custom data lists created by the organization.
+      operationId: datalistsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/datalists.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    datalists:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/DataList'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - datalists
+                - $ref: '#/components/schemas/ApiError'
+  /dataload.create:
+    post:
+      tags:
+      - dataload
+      summary: Create data load
+      description: Submits a CSV data load for employee or other supported synchronization. Files may be supplied by URL or
+        as a base64 data URI.
+      operationId: dataloadCreate
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/dataload.create
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                url:
+                  type: string
+                  format: uri
+                  description: Public HTTPS URL to the data-load file; signed S3 URLs are recommended.
+                  example: https://example.com/signed-file.csv
+                file:
+                  type: string
+                  description: 'Base64 CSV data URI beginning with "data:text/csv;base64,". Published limit: 12 MB.'
+                  example: data:text/csv;base64,...
+                adapter:
+                  type: string
+                  description: Adapter/template identifier to apply.
+                  example: acme-hr
+                failureEmails:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                  description: Email addresses notified if the data load fails.
+                  example:
+                  - jane@example.com
+                successEmails:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                  description: Email addresses notified when the data load finishes.
+                  example:
+                  - john@example.com
+                name:
+                  type: string
+                  description: Optional display name for the file. Defaults to api.TIMESTAMP.csv for a base64 file.
+                  example: simple-file-name.csv
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              url: https://example.com/signed-file.csv
+              file: data:text/csv;base64,...
+              adapter: acme-hr
+              failureEmails:
+              - jane@example.com
+              successEmails:
+              - john@example.com
+              name: simple-file-name.csv
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    dataload:
+                      $ref: '#/components/schemas/DataLoadCreate'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - dataload
+                - $ref: '#/components/schemas/ApiError'
+  /dataload.info:
+    post:
+      tags:
+      - dataload
+      summary: Get data-load status
+      description: Returns status for a submitted data load.
+      operationId: dataloadInfo
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/dataload.info
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                id:
+                  type: string
+                  description: Data-load ID.
+                  example: 5804f0f30ef50473af5870c6
+              required:
+              - token
+              - id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              id: 5804f0f30ef50473af5870c6
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    dataload:
+                      $ref: '#/components/schemas/DataLoad'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - dataload
+                - $ref: '#/components/schemas/ApiError'
+  /driver-qualifications.list:
+    post:
+      tags:
+      - driver-qualifications
+      summary: List driver qualification status
+      description: Returns employees and their driver qualification status details.
+      operationId: driverQualificationsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/driver-qualifications.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    users:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/DriverQualificationUser'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - users
+                - $ref: '#/components/schemas/ApiError'
+  /equipments.list:
+    post:
+      tags:
+      - equipments
+      summary: List equipment
+      description: Returns equipment for the specified equipment type, including inspection status.
+      operationId: equipmentsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/equipments.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                equipmentType_id:
+                  type: string
+                  description: Equipment type ID.
+                  example: 5804f0f80ef50473af587886
+                service_type:
+                  type: string
+                  default: in
+                  enum:
+                  - in
+                  - out
+                  - all
+                  description: Filter by in-service/out-of-service state.
+                  example: in
+                columns:
+                  type: array
+                  items:
+                    type: string
+                  description: Columns to fetch. Omit to return all columns.
+                  example:
+                  - id
+                  - serialNumber
+                  - created
+                  - status
+                  - schedules
+                include_null_metavalues:
+                  type: boolean
+                  default: false
+                  description: Include empty metafield IDs with null values.
+                  example: false
+              required:
+              - token
+              - equipmentType_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              equipmentType_id: 5804f0f80ef50473af587886
+              service_type: in
+              columns:
+              - id
+              - serialNumber
+              - created
+              - status
+              - schedules
+              include_null_metavalues: false
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    equipments:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Equipment'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - equipments
+                - $ref: '#/components/schemas/ApiError'
+  /equipmenttypes.list:
+    post:
+      tags:
+      - equipmenttypes
+      summary: List equipment types
+      description: Returns equipment types, including metafields and inspection schedules.
+      operationId: equipmenttypesList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/equipmenttypes.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    equipmenttypes:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/EquipmentType'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - equipmenttypes
+                - $ref: '#/components/schemas/ApiError'
+  /establishments.info:
+    post:
+      tags:
+      - establishments
+      summary: Get establishment
+      description: Returns details for an establishment. The documentation currently labels establishments as coming soon.
+      operationId: establishmentsInfo
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/establishments.info
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                establishment_id:
+                  type: integer
+                  description: Establishment ID.
+                  example: 324
+              required:
+              - token
+              - establishment_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              establishment_id: 324
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    establishment:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Establishment'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - establishment
+                - $ref: '#/components/schemas/ApiError'
+      x-novara-coming-soon: true
+  /establishments.list:
+    post:
+      tags:
+      - establishments
+      summary: List establishments
+      description: Returns establishments created by the organization. The documentation currently labels establishments as
+        coming soon.
+      operationId: establishmentsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/establishments.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    establishments:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Establishment'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - establishments
+                - $ref: '#/components/schemas/ApiError'
+      x-novara-coming-soon: true
+  /fieldoffices.list:
+    post:
+      tags:
+      - fieldoffices
+      summary: List field offices
+      description: Returns field offices for the organization.
+      operationId: fieldofficesList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/fieldoffices.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    fieldoffices:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/FieldOffice'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - fieldoffices
+                - $ref: '#/components/schemas/ApiError'
+  /followups.list:
+    post:
+      tags:
+      - followups
+      summary: List follow-ups
+      description: Searches follow-ups created within form responses, sorted newest first.
+      operationId: followupsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/followups.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                form_id:
+                  type: integer
+                  description: Filter by form ID.
+                  example: 3987
+                limit:
+                  type: integer
+                  default: 100
+                  minimum: 1
+                  maximum: 500
+                  description: Maximum follow-ups returned.
+                  example: 500
+                page:
+                  type: integer
+                  default: 1
+                  minimum: 1
+                  description: 1-based page number.
+                  example: 1
+                status:
+                  type: string
+                  enum:
+                  - all
+                  - open
+                  - closed
+                  - overdue
+                  description: Filter by follow-up status.
+                  example: open
+                observer_id:
+                  type: string
+                  description: Filter by observer user ID.
+                  example: 5804f0f30ef50473af5870c6
+                assignee_id:
+                  type: string
+                  description: Filter by current assignee user ID.
+                  example: 5804f0f30ef50473af5870c6
+                response_id:
+                  type: integer
+                  description: Filter by originating form response ID.
+                  example: 23974
+                created_before:
+                  type: integer
+                  description: Only records created before this Unix epoch time in milliseconds.
+                  example: 1476981004760
+                created_after:
+                  type: integer
+                  description: Only records created after this Unix epoch time in milliseconds.
+                  example: 1473688379489
+                updated_before:
+                  type: integer
+                  description: Only records updated before this Unix epoch time in milliseconds.
+                  example: 1476981004760
+                updated_after:
+                  type: integer
+                  description: Only records updated after this Unix epoch time in milliseconds.
+                  example: 1473688379489
+                followup_display_id:
+                  type: boolean
+                  description: Include each follow-up's display ID, the Follow-Up ID shown to users in Flex, as followup_display_id.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              form_id: 3987
+              limit: 500
+              page: 1
+              status: open
+              observer_id: 5804f0f30ef50473af5870c6
+              assignee_id: 5804f0f30ef50473af5870c6
+              response_id: 23974
+              created_before: 1476981004760
+              created_after: 1473688379489
+              updated_before: 1476981004760
+              updated_after: 1473688379489
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    followups:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Followup'
+                    paging:
+                      $ref: '#/components/schemas/Paging'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - followups
+                  - paging
+                - $ref: '#/components/schemas/ApiError'
+  /formfolders.list:
+    post:
+      tags:
+      - formfolders
+      summary: List form folders
+      description: Returns form folders for the organization.
+      operationId: formfoldersList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/formfolders.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    folders:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/FormFolder'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - folders
+                - $ref: '#/components/schemas/ApiError'
+  /forms.info:
+    post:
+      tags:
+      - forms
+      summary: Get form definition
+      description: Returns form metadata, version information, and fields.
+      operationId: formsInfo
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/forms.info
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                form_id:
+                  type: integer
+                  description: Form ID.
+                  example: 1234
+                include_versions:
+                  type: boolean
+                  default: false
+                  description: Include prior form versions.
+                  example: false
+              required:
+              - token
+              - form_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              form_id: 1234
+              include_versions: false
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    form:
+                      $ref: '#/components/schemas/FormDetail'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - form
+                - $ref: '#/components/schemas/ApiError'
+  /forms.list:
+    post:
+      tags:
+      - forms
+      summary: List forms
+      description: Returns forms created by the organization.
+      operationId: formsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/forms.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    forms:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/FormSummary'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - forms
+                - $ref: '#/components/schemas/ApiError'
+  /grouptrainings.list:
+    post:
+      tags:
+      - grouptrainings
+      summary: List group trainings
+      description: Returns completed group trainings.
+      operationId: grouptrainingsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/grouptrainings.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    grouptrainings:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/GroupTraining'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - grouptrainings
+                - $ref: '#/components/schemas/ApiError'
+  /inspections.list:
+    post:
+      tags:
+      - inspections
+      summary: List equipment inspections
+      description: Returns completed inspections for a given equipment item.
+      operationId: inspectionsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/inspections.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                equipment_id:
+                  type: string
+                  description: Equipment ID.
+                  example: 5804f0f30ef50473af5870c6
+              required:
+              - token
+              - equipment_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              equipment_id: 5804f0f30ef50473af5870c6
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    inspections:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Inspection'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - inspections
+                - $ref: '#/components/schemas/ApiError'
+  /jobtitles.list:
+    post:
+      tags:
+      - jobtitles
+      summary: List job titles
+      description: Returns job titles for the organization.
+      operationId: jobtitlesList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/jobtitles.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    jobtitles:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/JobTitle'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - jobtitles
+                - $ref: '#/components/schemas/ApiError'
+  /linesofbusiness.list:
+    post:
+      tags:
+      - linesofbusiness
+      summary: List lines of business
+      description: Returns lines of business for the organization.
+      operationId: linesofbusinessList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/linesofbusiness.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    linesofbusiness:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/LineOfBusiness'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - linesofbusiness
+                - $ref: '#/components/schemas/ApiError'
+  /osha-hours.list:
+    post:
+      tags:
+      - osha-hours
+      summary: List OSHA hours
+      description: Returns OSHA hours in JSON or CSV format, sorted newest first.
+      operationId: oshaHoursList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/osha-hours.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                establishment_ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: Filter by establishment IDs.
+                  example:
+                  - 1024
+                year:
+                  type: integer
+                  description: Filter by year.
+                  example: 2026
+                months:
+                  type: array
+                  items:
+                    type: integer
+                    minimum: 1
+                    maximum: 12
+                  description: Filter by month numbers.
+                  example:
+                  - 9
+                page:
+                  type: integer
+                  default: 1
+                  minimum: 1
+                  description: 1-based page number.
+                  example: 1
+                limit:
+                  type: integer
+                  default: 1000
+                  minimum: 1
+                  maximum: 1000
+                  description: Maximum records returned. Docs state a maximum and default of 1000.
+                  example: 100
+                format:
+                  type: string
+                  default: json
+                  enum:
+                  - json
+                  - csv
+                  description: Response format.
+                  example: csv
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              establishment_ids:
+              - 1024
+              year: 2026
+              months:
+              - 9
+              page: 1
+              limit: 100
+              format: csv
+      responses:
+        '200':
+          description: Successful JSON/CSV output or an application-level JSON error. Check content type and, for JSON, the
+            ok field.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+            novaraflex-total-results:
+              description: Total matching results when CSV is requested. Observed on the live API 2026-09-29; this method
+                sends only the novaraflex- pair, not the kpaehs- names the published docs give.
+              schema:
+                type: integer
+            novaraflex-last-page:
+              description: Last valid page number when CSV is requested.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    hours:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/OshaHoursEntry'
+                    paging:
+                      $ref: '#/components/schemas/Paging'
+                  required:
+                  - ok
+                  - hours
+                  - paging
+                  additionalProperties: true
+                  description: The published docs give no JSON example for this endpoint. The hours array and the shape of its
+                    items were observed on the live API on 2026-09-20; the object stays permissive.
+                - $ref: '#/components/schemas/ApiError'
+            text/csv:
+              schema:
+                type: string
+  /projects.info:
+    post:
+      tags:
+      - projects
+      summary: Get project
+      description: Returns a specific project.
+      operationId: projectsInfo
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/projects.info
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                project_id:
+                  type: integer
+                  description: Project ID.
+                  example: 21
+              required:
+              - token
+              - project_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              project_id: 21
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    project:
+                      $ref: '#/components/schemas/Project'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - project
+                - $ref: '#/components/schemas/ApiError'
+  /projects.list:
+    post:
+      tags:
+      - projects
+      summary: List projects
+      description: Returns projects, sorted newest first.
+      operationId: projectsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/projects.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                limit:
+                  type: integer
+                  default: 10
+                  minimum: 1
+                  maximum: 500
+                  description: Maximum projects returned.
+                  example: 100
+                page:
+                  type: integer
+                  default: 1
+                  minimum: 1
+                  description: 1-based page number.
+                  example: 1
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              limit: 100
+              page: 1
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    projects:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Project'
+                    paging:
+                      $ref: '#/components/schemas/Paging'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - projects
+                  - paging
+                - $ref: '#/components/schemas/ApiError'
+  /resources.list:
+    post:
+      tags:
+      - resources
+      summary: List resources
+      description: Returns resources such as PDFs and other documents made available to employees.
+      operationId: resourcesList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/resources.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    resources:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Resource'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - resources
+                - $ref: '#/components/schemas/ApiError'
+  /resourcetags.list:
+    post:
+      tags:
+      - resourcetags
+      summary: List resource tags
+      description: Returns resource tags/categories.
+      operationId: resourcetagsList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/resourcetags.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    resourcetags:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ResourceCategory'
+                      description: The live API names this array after the method, not after the category the vendor's prose
+                        describes. Observed 2026-09-20.
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - resourcetags
+                - $ref: '#/components/schemas/ApiError'
+  /responses.flat:
+    post:
+      tags:
+      - responses
+      summary: Export flattened form responses
+      description: Returns flattened form responses as JSON or CSV. Similar to the spreadsheet export in the application.
+      operationId: responsesFlat
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/responses.flat
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                form_id:
+                  type: integer
+                  description: Form ID.
+                  example: 3987
+                limit:
+                  type: integer
+                  default: 100
+                  minimum: 1
+                  maximum: 1000
+                  description: Maximum responses returned.
+                  example: 100
+                page:
+                  type: integer
+                  default: 1
+                  minimum: 1
+                  description: 1-based page number.
+                  example: 1
+                observer_id:
+                  type: string
+                  description: Filter by observer user ID.
+                  example: 5804f0f30ef50473af5870c6
+                before:
+                  type: integer
+                  description: Only responses submitted before this Unix epoch time in milliseconds.
+                  example: 1476981004760
+                after:
+                  type: integer
+                  description: Only responses submitted after this Unix epoch time in milliseconds.
+                  example: 1473688379489
+                updated_before:
+                  type: integer
+                  description: Only responses updated before this Unix epoch time in milliseconds.
+                  example: 1476981004760
+                updated_after:
+                  type: integer
+                  description: Only responses updated after this Unix epoch time in milliseconds.
+                  example: 1473688379489
+                format:
+                  type: string
+                  default: json
+                  enum:
+                  - json
+                  - csv
+                  description: Response format.
+                  example: csv
+                columns:
+                  type: array
+                  items:
+                    type: string
+                  description: Columns to fetch.
+                  example:
+                  - report number
+                  - observer
+                  - temperature
+                response_ids:
+                  type: array
+                  items:
+                    type: integer
+                  minItems: 1
+                  description: Specific response IDs to fetch.
+                  example:
+                  - 1023833
+                  - 1103837
+                deleted:
+                  type: boolean
+                  default: false
+                  description: False returns non-deleted responses; true returns deleted responses.
+                  example: true
+                skip_field_id_mapping:
+                  type: boolean
+                  default: false
+                  description: 'CSV only: omit the field-ID to field-title mapping row.'
+                  example: false
+                skip_field_id_mapping_json:
+                  type: boolean
+                  default: false
+                  description: 'JSON only: omit the field-ID to field-title mapping row.'
+                  example: false
+                force_date_format:
+                  type: boolean
+                  default: false
+                  description: Force dates to YYYY-MM-DD HH:mm:ss.
+                  example: false
+              required:
+              - token
+              - form_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              form_id: 3987
+              limit: 100
+              page: 1
+              observer_id: 5804f0f30ef50473af5870c6
+              before: 1476981004760
+              after: 1473688379489
+              updated_before: 1476981004760
+              updated_after: 1473688379489
+              format: csv
+              columns:
+              - report number
+              - observer
+              - temperature
+              response_ids:
+              - 1023833
+              - 1103837
+              deleted: true
+              skip_field_id_mapping: false
+              skip_field_id_mapping_json: false
+              force_date_format: false
+      responses:
+        '200':
+          description: Successful JSON/CSV output or an application-level JSON error. Check content type and, for JSON, the
+            ok field.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+            novaraflex-total-results:
+              description: Total matching results when CSV is requested. Observed on the live API 2026-09-29, alongside
+                identical legacy iscout- and kpaehs- pairs that are not modeled here.
+              schema:
+                type: integer
+            novaraflex-last-page:
+              description: Last valid page number when CSV is requested.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    responses:
+                      type: array
+                      items:
+                        type: object
+                        additionalProperties: true
+                      description: 'The flattened rows, observed on the wire 2026-09-19. Each row is a flat object keyed by
+                        the form''s own field identifiers, so the keys vary per form and are deliberately not enumerated. Unless
+                        skip_field_id_mapping_json is true, the first row is a field-ID to field-title mapping row whose values
+                        are all strings and which is not counted against limit; the data rows that follow carry string, integer,
+                        or number values.'
+                    paging:
+                      $ref: '#/components/schemas/Paging'
+                  required:
+                  - ok
+                  - responses
+                  - paging
+                  additionalProperties: true
+                  description: Published docs do not provide a complete JSON example for this endpoint; the row fields are
+                    intentionally permissive.
+                - $ref: '#/components/schemas/ApiError'
+            text/csv:
+              schema:
+                type: string
+  /responses.info:
+    post:
+      tags:
+      - responses
+      summary: Get form response
+      description: Returns a specific form response.
+      operationId: responsesInfo
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/responses.info
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                response_id:
+                  type: integer
+                  description: Response ID.
+                  example: 1024
+                followup_display_id:
+                  type: boolean
+                  description: Include the Follow-Up ID shown to users in Flex on the response's follow-ups.
+                  example: true
+              required:
+              - token
+              - response_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              response_id: 1024
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    response:
+                      $ref: '#/components/schemas/FormResponse'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - response
+                - $ref: '#/components/schemas/ApiError'
+  /responses.list:
+    post:
+      tags:
+      - responses
+      summary: List form responses
+      description: Returns responses for a specific form, sorted newest first. The docs prose says up to 100 responses while
+        the parameter table states limit max 500; this spec preserves the table constraint.
+      operationId: responsesList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/responses.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                form_id:
+                  type: integer
+                  description: Form ID.
+                  example: 3987
+                limit:
+                  type: integer
+                  default: 10
+                  minimum: 1
+                  maximum: 500
+                  description: Maximum responses returned. Parameter table says max 500.
+                  example: 100
+                page:
+                  type: integer
+                  default: 1
+                  minimum: 1
+                  description: 1-based page number.
+                  example: 1
+                observer_id:
+                  type: string
+                  description: Filter by observer user ID.
+                  example: 5804f0f30ef50473af5870c6
+                followups:
+                  type: string
+                  enum:
+                  - all
+                  - pending
+                  description: Filter based on pending follow-ups.
+                  example: pending
+                before:
+                  type: integer
+                  description: Only responses submitted before this Unix epoch time in milliseconds.
+                  example: 1476981004760
+                after:
+                  type: integer
+                  description: Only responses submitted after this Unix epoch time in milliseconds.
+                  example: 1473688379489
+                updated_before:
+                  type: integer
+                  description: Only responses updated before this Unix epoch time in milliseconds.
+                  example: 1476981004760
+                updated_after:
+                  type: integer
+                  description: Only responses updated after this Unix epoch time in milliseconds.
+                  example: 1473688379489
+                latest:
+                  type: boolean
+                  default: false
+                  description: Include latest revision details such as answers, location, and weather.
+                  example: true
+                deleted:
+                  type: boolean
+                  default: false
+                  description: False returns non-deleted responses; true returns deleted responses.
+                  example: true
+                followup_display_id:
+                  type: boolean
+                  description: Include the Follow-Up ID shown to users in Flex on the responses' follow-ups. The docs say it requires
+                    latest=true; on 2026-09-29 the live API also accepted it without latest.
+                  example: true
+              required:
+              - token
+              - form_id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              form_id: 3987
+              limit: 100
+              page: 1
+              observer_id: 5804f0f30ef50473af5870c6
+              followups: pending
+              before: 1476981004760
+              after: 1473688379489
+              updated_before: 1476981004760
+              updated_after: 1473688379489
+              latest: true
+              deleted: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    description:
+                      type: string
+                      description: A display title for the result set, such as the form name and the filter applied. Shown in the
+                        docs example and observed on the live API on 2026-09-29.
+                    responses:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/FormResponse'
+                    paging:
+                      $ref: '#/components/schemas/Paging'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - responses
+                  - description
+                  - paging
+                - $ref: '#/components/schemas/ApiError'
+  /roles.list:
+    post:
+      tags:
+      - roles
+      summary: List roles
+      description: Returns roles for the organization.
+      operationId: rolesList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/roles.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    roles:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Role'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - roles
+                - $ref: '#/components/schemas/ApiError'
+  /training-employee-status.list:
+    post:
+      tags:
+      - training-employee-status
+      summary: List employee training status
+      description: Returns training completion percentages and status by employee. Published results may be cached for 15
+        minutes.
+      operationId: trainingEmployeeStatusList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/training-employee-status.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                training_ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: Filter by training IDs.
+                  example:
+                  - 1024
+                m_user_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: Filter by user IDs.
+                  example:
+                  - 625f865bdd51af8397e3d6b9
+                limit:
+                  type: integer
+                  default: 1000
+                  minimum: 1
+                  maximum: 1000
+                  description: Maximum records returned.
+                  example: 1000
+                page:
+                  type: integer
+                  default: 1
+                  minimum: 1
+                  description: 1-based page number.
+                  example: 1
+                include_all_completions:
+                  type: boolean
+                  default: false
+                  description: Include non-required training completions in "last_completed".
+                  example: false
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              training_ids:
+              - 1024
+              m_user_ids:
+              - 625f865bdd51af8397e3d6b9
+              limit: 1000
+              page: 1
+              include_all_completions: false
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    last_updated:
+                      type: integer
+                      description: When these results were last calculated, as Unix epoch milliseconds. The vendor caches results
+                        for 15 minutes. A response property, not a request parameter.
+                    paging:
+                      $ref: '#/components/schemas/Paging'
+                    employees:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/TrainingEmployeeStatus'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - employees
+                  - last_updated
+                  - paging
+                - $ref: '#/components/schemas/ApiError'
+  /trainings.v2.list:
+    post:
+      tags:
+      - trainings
+      summary: List trainings
+      description: Returns trainings. This is the v2 endpoint; the older trainings.list endpoint is deprecated.
+      operationId: trainingsV2List
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/trainings.v2.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    trainings:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Training'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - trainings
+                - $ref: '#/components/schemas/ApiError'
+  /users.info:
+    post:
+      tags:
+      - users
+      summary: Get user
+      description: Returns details for a specific user.
+      operationId: usersInfo
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/users.info
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+                id:
+                  type: string
+                  description: User ID.
+                  example: 5804f0f30ef50473af5870c6
+              required:
+              - token
+              - id
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+              id: 5804f0f30ef50473af5870c6
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    user:
+                      $ref: '#/components/schemas/User'
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - user
+                - $ref: '#/components/schemas/ApiError'
+  /users.list:
+    post:
+      tags:
+      - users
+      summary: List users
+      description: Returns employees/users for the organization.
+      operationId: usersList
+      externalDocs:
+        url: https://api.novaraflex.com/docs/method/users.list
+      x-novara-get-supported: true
+      x-novara-get-note: The API also supports GET by placing a URL-encoded raw JSON object directly after '?'. This is intentionally
+        not modeled as an OpenAPI GET operation because standard OpenAPI query parameters cannot accurately represent that
+        wire format.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token:
+                  type: string
+                  description: Novara Flex API token. Treat as a secret; tokens provide broad account access.
+                  example: YOUR_TOKEN
+                pretty:
+                  type: boolean
+                  default: false
+                  description: When true, adds whitespace to JSON responses.
+                  example: true
+              required:
+              - token
+            example:
+              token: YOUR_TOKEN
+              pretty: true
+      responses:
+        '200':
+          description: Success or application-level error. Novara Flex documents both as HTTP 200; inspect the ok property.
+          headers:
+            HZS-Request-ID:
+              description: Alpha-numeric request identifier used for support/debugging.
+              schema:
+                type: string
+            HZS-Response-Time:
+              description: Server processing time in milliseconds.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      enum:
+                      - true
+                    users:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/User'
+                    columns:
+                      type: array
+                      items:
+                        type: string
+                      description: Column keys the account's user list is configured to expose. Returned alongside `users`.
+                  additionalProperties: true
+                  required:
+                  - ok
+                  - users
+                - $ref: '#/components/schemas/ApiError'
+components:
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          enum:
+          - false
+        error:
+          type: string
+          enum:
+          - api_method_not_found
+          - request_method_invalid
+          - request_data_invalid
+          - rate_limit_exceeded
+          - token_missing
+          - token_invalid
+          - token_inactive
+          - token_permission
+          - account_inactive
+          - parameter_unexpected
+          - parameter_missing
+          - parameter_invalid
+          - server_error
+          - content_not_found
+          - invalid_key_for_customer
+        description:
+          type: string
+      additionalProperties: true
+      required:
+      - ok
+      - error
+      description: Application-level error. Novara Flex documents these as HTTP 200 responses.
+    Paging:
+      type: object
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        last_page:
+          type: integer
+          minimum: 0
+      additionalProperties: true
+      required:
+      - total
+      - last_page
+    Account:
+      description: Only the identity fields are required until more records of this schema have been observed on the
+        live API.
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        subdomain:
+          type: string
+        created:
+          type: integer
+        expiresOn:
+          type: integer
+        userMetafields:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              type:
+                type: string
+                description: 'Values in the docs examples, here and for equipment metafields: text, number, list. Not an enum.'
+              list_id:
+                type:
+                - integer
+                - 'null'
+                description: Nullable to match EquipmentMetafield.list_id, which the live API sends as null on metafields
+                  that are not list-backed.
+            additionalProperties: true
+            required:
+            - id
+            - name
+            - type
+            - list_id
+      additionalProperties: true
+      required:
+      - id
+      - name
+    AcknowledgmentRecipient:
+      description: No property is required, because it has no identity field and too few records of this schema have
+        been observed on the live API to judge the rest.
+      type: object
+      properties:
+        user_id:
+          type: string
+        acknowledgedOn:
+          type:
+          - integer
+          - 'null'
+      additionalProperties: true
+    Acknowledgment:
+      description: Only the identity fields are required until more records of this schema have been observed on the
+        live API.
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        created:
+          type: integer
+        author_id:
+          type: string
+        specificEmployees_id:
+          type: array
+          items:
+            type: string
+        fieldOffices_id:
+          type: array
+          items:
+            type: string
+        linesOfBusiness_id:
+          type: array
+          items:
+            type: string
+        jobTitles_id:
+          type: array
+          items:
+            type: string
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/AcknowledgmentRecipient'
+      additionalProperties: true
+      required:
+      - id
+      - name
+    Company:
+      description: Only the identity fields are required until more records of this schema have been observed on the
+        live API.
+      type: object
+      properties:
+        name:
+          type: string
+        created:
+          type: integer
+        id:
+          type: string
+      additionalProperties: true
+      required:
+      - name
+      - id
+    CompletedTraining:
+      type: object
+      properties:
+        id:
+          type: integer
+        training_id:
+          type: integer
+        m_user_id:
+          type: string
+        created:
+          type: integer
+        date_number:
+          type: integer
+        special_expiration_date_number:
+          type:
+          - integer
+          - 'null'
+        m_instructor_id:
+          type:
+          - string
+          - 'null'
+        group_training_id:
+          type:
+          - integer
+          - 'null'
+        notes:
+          type:
+          - string
+          - 'null'
+          description: Observed as null on the live API on 2026-09-29, although the docs example shows a string.
+        signature: {}
+        files:
+          type: array
+          items:
+            type: object
+            properties: {}
+            additionalProperties: true
+      additionalProperties: true
+      required:
+      - id
+      - training_id
+      - m_user_id
+      - created
+      - date_number
+      - special_expiration_date_number
+      - m_instructor_id
+      - group_training_id
+      - notes
+      - signature
+      - files
+    ContractorContact:
+      type: object
+      properties:
+        id:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        title:
+          type: string
+        mine:
+          type: boolean
+      additionalProperties: true
+    ContractorRequirement:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type_id:
+          type: integer
+        type:
+          type: string
+          description: 'Values in the docs example: SignOff, Upload, Form, Training. Not an enum; note that the request filter
+            spells the first one Signoff.'
+        related_id:
+          type: string
+          description: The id of the related record, such as the form or training behind the requirement. Shown in the docs
+            example only; not yet observed on the wire.
+        description:
+          type: string
+          description: Shown in the docs example only; not yet observed on the wire.
+        isActive:
+          type: boolean
+        compliance_scoring:
+          type: boolean
+        recurring:
+          type: boolean
+        vendor_count:
+          type: integer
+        form_expiration_date:
+          type: boolean
+      additionalProperties: true
+    Contractor:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        approval_status:
+          type: string
+          description: 'Values in the docs example: New, Pending, Denied (capitalized, while the request filter takes new, pending,
+            approved, or denied). Not an enum.'
+        contractor_compliance_score:
+          type: number
+        employee_compliance_score:
+          type: number
+        tags:
+          type: string
+        auto_approve:
+          type: boolean
+      additionalProperties: true
+    DataListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        created:
+          type: integer
+        updated:
+          type: integer
+        title:
+          type: string
+        data_list_id:
+          type: integer
+        sequence:
+          type: integer
+        code:
+          type: string
+        description:
+          type: string
+      additionalProperties: true
+      required:
+      - id
+      - created
+      - updated
+      - title
+      - data_list_id
+      - sequence
+      - code
+      - description
+    DataList:
+      type: object
+      properties:
+        id:
+          type: integer
+        created:
+          type: integer
+        updated:
+          type: integer
+        title:
+          type: string
+      additionalProperties: true
+      required:
+      - id
+      - created
+      - updated
+      - title
+    DataLoadCreate:
+      type: object
+      properties:
+        id:
+          type: string
+      additionalProperties: true
+    DataLoad:
+      type: object
+      properties:
+        id:
+          type: string
+        created:
+          type: integer
+        creator_id:
+          type: string
+        adapter:
+          type: string
+        status:
+          type: string
+          enum:
+          - dataload
+          - dataloading
+          - dataloaded
+          - error
+        history:
+          type: string
+      additionalProperties: true
+    DriverQualificationRequirement:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        status:
+          type: string
+          description: 'Values in the docs example: active, expiring. Not an enum.'
+        expiration:
+          type: string
+          description: Either never or a date formatted MM/DD/YYYY, per the docs example.
+        lastCompleted:
+          type: string
+          description: A date formatted MM/DD/YYYY, per the docs example.
+      additionalProperties: true
+    DriverQualificationUser:
+      type: object
+      properties:
+        id:
+          type: string
+        employeeNumber:
+          type: string
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/DriverQualificationRequirement'
+      additionalProperties: true
+    EquipmentScheduleStatus:
+      type: object
+      properties:
+        schedule_id:
+          type: string
+        status:
+          type: string
+          enum:
+          - uptodate
+          - expiring
+          - expired
+        expiresOn:
+          type:
+          - integer
+          - 'null'
+          description: Null in the docs example for a schedule that has never been completed.
+        expiringOn:
+          type:
+          - integer
+          - 'null'
+          description: Null in the docs example for a schedule that has never been completed.
+        lastCompletedOn:
+          type:
+          - integer
+          - 'null'
+          description: Null in the docs example for a schedule that has never been completed.
+      additionalProperties: true
+    Equipment:
+      type: object
+      properties:
+        id:
+          type: string
+        serialNumber:
+          type: string
+        equipmentType_id:
+          type: string
+        created:
+          type: integer
+        parent_id:
+          type: string
+        fieldOffice_id:
+          type: array
+          items:
+            type: string
+        lineOfBusiness_id:
+          type: string
+        clients_id:
+          type: array
+          items:
+            type: string
+        assignedUsers_id:
+          type: array
+          items:
+            type: string
+        title:
+          type: string
+        notes:
+          type: string
+        isInService:
+          type: boolean
+        metavalues:
+          type: object
+          properties: {}
+          additionalProperties: true
+        status:
+          type: string
+          enum:
+          - uptodate
+          - expiring
+          - expired
+        schedules:
+          type: array
+          items:
+            $ref: '#/components/schemas/EquipmentScheduleStatus'
+        projects:
+          type: array
+          description: The projects the equipment is assigned to. Shown in the docs example and observed on the live API on
+            2026-09-29.
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+            additionalProperties: true
+            required:
+            - id
+            - name
+      additionalProperties: true
+      required:
+      - id
+      - serialNumber
+      - equipmentType_id
+      - created
+      - clients_id
+      - assignedUsers_id
+      - title
+      - notes
+      - isInService
+      - metavalues
+      - projects
+    EquipmentMetafield:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          description: 'Values in the docs example: text, number, list. Not an enum: the live API uses at least one other value.'
+        list_id:
+          type:
+          - integer
+          - 'null'
+          description: Null for metafields that are not backed by a list.
+      additionalProperties: true
+      required:
+      - id
+      - name
+      - type
+      - list_id
+    EquipmentType:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        created:
+          type: integer
+        metafields:
+          type: array
+          items:
+            $ref: '#/components/schemas/EquipmentMetafield'
+        schedules:
+          type: array
+          items:
+            $ref: '#/components/schemas/EquipmentTypeSchedule'
+      additionalProperties: true
+      required:
+      - id
+      - title
+      - created
+      - metafields
+      - schedules
+    EquipmentTypeSchedule:
+      description: An inspection schedule of an equipment type, typed from the docs example. Not yet observed on the live
+        API, so nothing is required.
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        form_id:
+          type: integer
+          description: The inspection form. Absent from two of the three schedules in the docs example.
+        instructions:
+          type: string
+        doRequireAttachments:
+          type: boolean
+        trigger:
+          $ref: '#/components/schemas/EquipmentScheduleTrigger'
+      additionalProperties: true
+    EquipmentScheduleTrigger:
+      description: When an inspection schedule falls due, typed from the docs example. Never observed on the live API.
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'Value in the docs example: time. Not an enum.'
+        timing:
+          type: string
+          description: 'Values in the docs example: rolling, dom, dow. Not an enum, since schedules are unverified on the
+            live API.'
+        expiringPeriodInDays:
+          type: integer
+        frequencyInDays:
+          type: integer
+        timingDateNumber:
+          type: integer
+          description: A date number such as 20190101. Shown in the docs example only when timing is dom or dow.
+      additionalProperties: true
+    Establishment:
+      description: Only the identity fields are required until more records of this schema have been observed on the
+        live API.
+      type: object
+      properties:
+        id:
+          type: integer
+        created:
+          type: integer
+        updated:
+          type: integer
+        name:
+          type: string
+        street:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        industry_description:
+          type: string
+      additionalProperties: true
+      required:
+      - id
+      - name
+    FieldOffice:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        created:
+          type: integer
+        manager_id:
+          type: string
+        id:
+          type: string
+        inactive:
+          type: boolean
+      additionalProperties: true
+      required:
+      - name
+      - code
+      - created
+      - id
+      - inactive
+    FollowupMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          type: integer
+        m_user_id:
+          type: string
+        m_reassignee_id:
+          type:
+          - string
+          - 'null'
+          description: Nullable because the docs' responses.info and responses.list examples show null on an embedded follow-up
+            message. Never observed on the live API.
+        note:
+          type: string
+        signature: {}
+        notify:
+          type: boolean
+          description: Shown in the docs example; observed as a boolean on some messages on the live API on 2026-09-29.
+        attachments:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              caption:
+                type: string
+            additionalProperties: true
+            required:
+            - key
+      additionalProperties: true
+      required:
+      - id
+      - date
+      - m_user_id
+      - note
+    Followup:
+      type: object
+      properties:
+        id:
+          type: string
+        form_id:
+          type: integer
+        response_id:
+          type: integer
+        open:
+          type: boolean
+        created_on:
+          oneOf:
+          - type: string
+          - type: integer
+          description: Observed on the wire as a numeric string, though the docs describe an epoch integer.
+        updated_on:
+          oneOf:
+          - type: string
+          - type: integer
+          description: Observed on the wire as a numeric string, though the docs describe an epoch integer.
+        m_observer_id:
+          type: string
+        m_assigner_id:
+          type: string
+        m_assignee_id:
+          type: string
+        due:
+          type:
+          - integer
+          - 'null'
+          description: Null when the follow-up has no due date.
+        resolved_on:
+          oneOf:
+          - type: string
+          - type: integer
+          - type: 'null'
+          description: Null while the follow-up is open; observed on the wire as a numeric string once resolved.
+        m_completer_id:
+          type:
+          - string
+          - 'null'
+          description: Null while the follow-up is open.
+        followup_display_id:
+          type: string
+          description: The Follow-Up ID shown to users in Flex. Sent only when the request sets followup_display_id to true.
+            The docs example shows a number; the live API sent a string on every follow-up on 2026-09-29, so the live type
+            is declared.
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/FollowupMessage'
+      additionalProperties: true
+      required:
+      - id
+      - form_id
+      - response_id
+      - open
+      - created_on
+      - updated_on
+      - m_observer_id
+      - m_assigner_id
+      - m_assignee_id
+      - due
+      - resolved_on
+      - m_completer_id
+      - messages
+    FormFolder:
+      type: object
+      properties:
+        id:
+          type: integer
+        created:
+          type: integer
+        updated:
+          type: integer
+        sequence:
+          type: integer
+        name:
+          type: string
+      additionalProperties: true
+      required:
+      - id
+      - created
+      - updated
+      - sequence
+      - name
+    FormSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        created:
+          type: integer
+        updated:
+          type: integer
+        sequence:
+          type: integer
+        folder_id:
+          type:
+          - integer
+          - 'null'
+          description: Null for a form that is not filed in a folder.
+        name:
+          type: string
+        hidden:
+          type: boolean
+        description:
+          type: string
+        score:
+          type: boolean
+      additionalProperties: true
+      required:
+      - id
+      - created
+      - updated
+      - sequence
+      - folder_id
+      - name
+      - hidden
+      - description
+      - score
+    FormDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        created:
+          type: integer
+        updated:
+          type: integer
+        sequence:
+          type: integer
+        folder_id:
+          type:
+          - integer
+          - 'null'
+          description: Null for a form that is not filed in a folder, matching FormSummary.
+        name:
+          type: string
+        hidden:
+          type: boolean
+        description:
+          type: string
+        score:
+          type: boolean
+        latest:
+          $ref: '#/components/schemas/FormVersion'
+        versions:
+          description: The form's earlier versions. Sent only when the request sets include_versions; the
+            current version is in latest and is not repeated here.
+          type: array
+          items:
+            $ref: '#/components/schemas/FormVersion'
+      additionalProperties: true
+      required:
+      - id
+      - created
+      - updated
+      - sequence
+      - name
+      - hidden
+      - description
+      - score
+      - latest
+    FormField:
+      description: 'One field of a form version, discriminated on type. The published docs describe neither the field
+        types nor their settings; the types and every settings shape here were observed on the live API across form
+        definitions and every version of each (include_versions) on 2026-09-27, and re-checked on 2026-09-29.
+        No earlier version used a type outside this set. The common types carry a typed settings object; the rare ones
+        (counter, calculation, followup, subreport) keep settings open. A settings key is required only where every
+        field of that type, in every version, carried it. Field-level display flags (hidden, varName, showif, and
+        similar) are not modeled and pass through as additional properties.'
+      oneOf:
+      - $ref: '#/components/schemas/FormFieldAttachments'
+      - $ref: '#/components/schemas/FormFieldCalculation'
+      - $ref: '#/components/schemas/FormFieldCheckbox'
+      - $ref: '#/components/schemas/FormFieldCounter'
+      - $ref: '#/components/schemas/FormFieldDatetime'
+      - $ref: '#/components/schemas/FormFieldDescription'
+      - $ref: '#/components/schemas/FormFieldFollowup'
+      - $ref: '#/components/schemas/FormFieldGroupSignature'
+      - $ref: '#/components/schemas/FormFieldHeading'
+      - $ref: '#/components/schemas/FormFieldSelect'
+      - $ref: '#/components/schemas/FormFieldSketch'
+      - $ref: '#/components/schemas/FormFieldSubreport'
+      - $ref: '#/components/schemas/FormFieldText'
+      discriminator:
+        propertyName: type
+        mapping:
+          attachments: '#/components/schemas/FormFieldAttachments'
+          calculation: '#/components/schemas/FormFieldCalculation'
+          checkbox: '#/components/schemas/FormFieldCheckbox'
+          counter: '#/components/schemas/FormFieldCounter'
+          datetime: '#/components/schemas/FormFieldDatetime'
+          description: '#/components/schemas/FormFieldDescription'
+          followup: '#/components/schemas/FormFieldFollowup'
+          groupsignature: '#/components/schemas/FormFieldGroupSignature'
+          heading: '#/components/schemas/FormFieldHeading'
+          select: '#/components/schemas/FormFieldSelect'
+          sketch: '#/components/schemas/FormFieldSketch'
+          subreport: '#/components/schemas/FormFieldSubreport'
+          text: '#/components/schemas/FormFieldText'
+    FormFieldAttachments:
+      description: A file or photo upload field.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: attachments
+          settings:
+            $ref: '#/components/schemas/FormFieldAttachmentsSettings'
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldAttachmentsSettings:
+      description: No key is on every attachments field.
+      type: object
+      properties:
+        visibility:
+          type: string
+          description: 'Observed values: private, public.'
+        camera:
+          type: boolean
+        attachmentMethod:
+          type: string
+          description: 'Observed values: upload, resources.'
+        resourceTags:
+          type: string
+        fileTypes:
+          type: string
+          description: Only the empty string was observed.
+      additionalProperties: true
+    FormFieldAutoPopulateData:
+      type: object
+      properties:
+        parentId:
+          type: string
+        value:
+          type: string
+      additionalProperties: true
+      required:
+      - parentId
+      - value
+    FormFieldBase:
+      description: The properties every FormField variant shares. Its id keys the field's answer in a responses.flat row.
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        shortTitle:
+          type: string
+        required:
+          type: boolean
+        description:
+          type: string
+      additionalProperties: true
+      required:
+      - id
+      - title
+      - shortTitle
+      - required
+      - description
+    FormFieldCalculation:
+      description: A computed value. Rare, so its settings stay open.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: calculation
+          settings:
+            type: object
+            additionalProperties: true
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldCheckbox:
+      description: A single yes/no input.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: checkbox
+          settings:
+            $ref: '#/components/schemas/FormFieldCheckboxSettings'
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldCheckboxSettings:
+      type: object
+      properties:
+        inputtype:
+          type: string
+          description: 'Observed values: checkbox, switch.'
+        category:
+          type: string
+          description: Only the empty string was observed.
+        defaulted:
+          type: boolean
+      additionalProperties: true
+      required:
+      - inputtype
+    FormFieldCounter:
+      description: A counter over a nested set of fields. Rare, so its settings stay open.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: counter
+          settings:
+            type: object
+            additionalProperties: true
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldDatetime:
+      description: A date and/or time input.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: datetime
+          settings:
+            $ref: '#/components/schemas/FormFieldDatetimeSettings'
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldDatetimeSettings:
+      type: object
+      properties:
+        date:
+          type: boolean
+          description: Whether the field asks for a date.
+        time:
+          type: boolean
+          description: Whether the field asks for a time of day.
+        military:
+          type: boolean
+          description: Whether the time uses the 24-hour clock.
+        punchclock:
+          type: boolean
+        locate:
+          type: boolean
+      additionalProperties: true
+      required:
+      - date
+    FormFieldDescription:
+      description: A block of explanatory text and images; it takes no answer.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: description
+          settings:
+            $ref: '#/components/schemas/FormFieldDescriptionSettings'
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldDescriptionSettings:
+      type: object
+      properties:
+        description:
+          type: string
+          description: The text the block shows.
+        imageKeys:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+                description: An attachment key.
+            additionalProperties: true
+            required:
+            - key
+        showOnOutput:
+          type: boolean
+      additionalProperties: true
+      required:
+      - description
+    FormFieldFollowup:
+      description: A follow-up request. Rare, so its settings stay open.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: followup
+          settings:
+            type: object
+            additionalProperties: true
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldGroupSignature:
+      description: Signatures collected from a group of people.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: groupsignature
+          settings:
+            $ref: '#/components/schemas/FormFieldGroupSignatureSettings'
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldGroupSignatureSettings:
+      description: Only empty arrays were observed for preFilterIds, preFilterRoles, and hideIds, so their items stay
+        untyped.
+      type: object
+      properties:
+        scan:
+          type: boolean
+        pinToProfile:
+          type: boolean
+        preFilterIds:
+          type: array
+        preFilterRoles:
+          type: array
+        hideIds:
+          type: array
+      additionalProperties: true
+      required:
+      - scan
+      - pinToProfile
+      - preFilterIds
+      - preFilterRoles
+      - hideIds
+    FormFieldHeading:
+      description: A section heading; it takes no answer. No settings key was observed, so settings stays open.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: heading
+          settings:
+            type: object
+            additionalProperties: true
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldSelect:
+      description: A choice among options, listed inline in settings.items or drawn from the source settings.sourceId
+        names.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: select
+          settings:
+            $ref: '#/components/schemas/FormFieldSelectSettings'
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldSelectOption:
+      type: object
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+        score:
+          type:
+          - number
+          - 'null'
+          description: The option's score on a scored form; null when it has none.
+        color:
+          type: string
+        inactive:
+          type: boolean
+      additionalProperties: true
+      required:
+      - label
+      - value
+      - score
+    FormFieldSelectSettings:
+      type: object
+      properties:
+        style:
+          type: string
+          description: 'Observed values: rating, select, list.'
+        multiple:
+          type: boolean
+          description: Whether more than one option may be chosen.
+        items:
+          type: array
+          description: The inline options. Empty when sourceId names a source.
+          items:
+            $ref: '#/components/schemas/FormFieldSelectOption'
+        sourceId:
+          type:
+          - string
+          - integer
+          description: 'Where the options come from: the empty string for the inline items; a built-in source name
+            (observed: users, projects, field-offices, equipment, clients, lines-of-business, job-titles,
+            establishments, trainings); or the id of a data list, usually as a numeric string and rarely as an
+            integer.'
+        previewId:
+          type: string
+          description: 'Usually the empty string. Observed non-empty values include source-preview-data-list and
+            source-preview-employee.'
+        filterCondition:
+          type: string
+        defaultIds:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        preFilterIds:
+          type: array
+          items:
+            type: string
+        autoPopulateIds:
+          type: array
+          items:
+            type: string
+        autoPopulateData:
+          $ref: '#/components/schemas/FormFieldAutoPopulateData'
+        hideIds:
+          type: array
+          description: Only empty arrays were observed, so the items stay untyped.
+        scan:
+          type: boolean
+        onlyScan:
+          type: boolean
+        showAllOnOutput:
+          type: boolean
+        pinToProfile:
+          type: boolean
+        previewOnResponse:
+          type: boolean
+        showOmitted:
+          type: boolean
+        showInFilter:
+          type: boolean
+      additionalProperties: true
+      required:
+      - style
+      - multiple
+      - items
+    FormFieldSketch:
+      description: A drawing pad, also used for single signatures.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: sketch
+          settings:
+            $ref: '#/components/schemas/FormFieldSketchSettings'
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldSketchMark:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'Observed value: line.'
+        color:
+          type: string
+        points:
+          type: array
+          items:
+            type: object
+            properties:
+              x:
+                type: number
+              y:
+                type: number
+            additionalProperties: true
+            required:
+            - x
+            - y
+      additionalProperties: true
+      required:
+      - type
+      - color
+      - points
+    FormFieldSketchSettings:
+      description: No key is on every sketch field.
+      type: object
+      properties:
+        bg:
+          type: string
+          description: 'The background: the empty string or signature.'
+        bgImg:
+          description: Deliberately untyped. Only null was observed, so its non-null type is unknown.
+        marks:
+          type: array
+          description: Strokes drawn in the form builder.
+          items:
+            $ref: '#/components/schemas/FormFieldSketchMark'
+      additionalProperties: true
+    FormFieldSubreport:
+      description: An embedded response to another form. Rare, so its settings stay open.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: subreport
+          settings:
+            type: object
+            additionalProperties: true
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldText:
+      description: A free-text input.
+      allOf:
+      - $ref: '#/components/schemas/FormFieldBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            const: text
+          settings:
+            $ref: '#/components/schemas/FormFieldTextSettings'
+        additionalProperties: true
+        required:
+        - type
+        - settings
+    FormFieldTextSettings:
+      type: object
+      properties:
+        texttype:
+          type: string
+          description: 'Observed values: singleline, multiline.'
+        keyboardtype:
+          type: string
+          description: 'Observed values: text, number, positiveinteger.'
+        default:
+          type: string
+        sourceId:
+          type: string
+        autoPopulateData:
+          $ref: '#/components/schemas/FormFieldAutoPopulateData'
+        items:
+          type: array
+          description: Only empty arrays were observed, so the items stay untyped.
+      additionalProperties: true
+      required:
+      - texttype
+    FormVersion:
+      description: One version of a form's definition, as forms.info returns it in latest and, with include_versions, in
+        versions.
+      type: object
+      properties:
+        version:
+          type: integer
+        created:
+          type: integer
+        m_user_id:
+          type: string
+          description: The user who saved this version. Absent on some versions.
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FormField'
+      additionalProperties: true
+      required:
+      - version
+      - fields
+    GroupTraining:
+      type: object
+      properties:
+        id:
+          type: integer
+        created:
+          type: integer
+        m_trainees_id:
+          type: array
+          items:
+            type: string
+        trainings_id:
+          type: array
+          items:
+            type: integer
+        m_instructor_id:
+          type: string
+        notes:
+          type: string
+      additionalProperties: true
+      required:
+      - id
+      - created
+      - m_trainees_id
+      - trainings_id
+      - m_instructor_id
+      - notes
+    Inspection:
+      type: object
+      properties:
+        equipment_id:
+          type: string
+        created:
+          type: integer
+        equipmentType_id:
+          type: string
+        schedule_id:
+          type: string
+        inspector_id:
+          type: string
+        date:
+          type: integer
+        notes:
+          type: string
+        id:
+          type: string
+      additionalProperties: true
+    JobTitle:
+      type: object
+      properties:
+        title:
+          type: string
+        created:
+          type: integer
+        id:
+          type: string
+      additionalProperties: true
+    LineOfBusiness:
+      description: Only the identity fields are required until more records of this schema have been observed on the
+        live API.
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        created:
+          type: integer
+        id:
+          type: string
+      additionalProperties: true
+      required:
+      - name
+      - id
+    OshaHoursEntry:
+      description: One month of recorded OSHA hours for one establishment. The published docs give no JSON example for osha-hours.list;
+        every field here was observed on the live API on 2026-09-20.
+      type: object
+      properties:
+        id:
+          type: integer
+        establishment_id:
+          type: integer
+        year:
+          type: integer
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        hours:
+          type: number
+        client_id:
+          description: Deliberately untyped. Only null was observed on the wire, and the published docs do not describe the
+            field, so its non-null type is unknown.
+        fo_id:
+          description: Field office. Deliberately untyped for the same reason as client_id.
+        lob_id:
+          description: Line of business. Deliberately untyped for the same reason as client_id.
+      additionalProperties: true
+      required:
+      - id
+      - establishment_id
+      - year
+      - month
+      - hours
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        created:
+          oneOf:
+          - type: string
+          - type: integer
+        updated:
+          oneOf:
+          - type: string
+          - type: integer
+        deleted:
+          type: boolean
+        name:
+          type: string
+        number:
+          type: string
+        address:
+          type:
+          - string
+          - 'null'
+        city:
+          type:
+          - string
+          - 'null'
+        state:
+          type:
+          - string
+          - 'null'
+        zip:
+          type:
+          - string
+          - 'null'
+        active:
+          type: boolean
+        notes:
+          type:
+          - string
+          - 'null'
+        attachments:
+          type: array
+          items:
+            type: object
+            properties: {}
+            additionalProperties: true
+      additionalProperties: true
+      required:
+      - id
+      - created
+      - updated
+      - deleted
+      - name
+      - number
+      - address
+      - city
+      - state
+      - zip
+      - active
+      - notes
+      - attachments
+    Resource:
+      type: object
+      properties:
+        title:
+          type: string
+        created:
+          type: integer
+        sequence:
+          type: integer
+        category_id:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        shouldBeAvailableOffline:
+          type: boolean
+        versions:
+          type: array
+          items:
+            type: object
+            properties:
+              creator_id:
+                type: string
+              created:
+                type: integer
+              approvedOn:
+                type: integer
+              version:
+                type: string
+              description:
+                type: string
+              file:
+                type:
+                - string
+                - 'null'
+                description: Null when the version is a link rather than an uploaded document.
+              link:
+                type: string
+              type:
+                type: string
+                description: 'Values in the docs example: file, link. Not an enum.'
+            additionalProperties: true
+            required:
+            - creator_id
+            - created
+            - approvedOn
+            - version
+            - description
+            - file
+            - type
+        id:
+          type: string
+      additionalProperties: true
+      required:
+      - title
+      - created
+      - sequence
+      - tags
+      - shouldBeAvailableOffline
+      - versions
+      - id
+    ResourceCategory:
+      type: object
+      properties:
+        name:
+          type: string
+        sequence:
+          type: integer
+        roles_id:
+          type: array
+          items:
+            type: string
+      additionalProperties: true
+      required:
+      - name
+      - sequence
+      - roles_id
+    FormResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        parent_response_id:
+          type:
+          - integer
+          - 'null'
+        pending_followup_assignees_id:
+          type: array
+          items:
+            type: string
+        created:
+          oneOf:
+          - type: string
+          - type: integer
+          description: An epoch integer from responses.list, but a numeric string from responses.info.
+        updated:
+          oneOf:
+          - type: string
+          - type: integer
+          description: An epoch integer from responses.list, but a numeric string from responses.info.
+        deleted:
+          type: boolean
+        latest:
+          $ref: '#/components/schemas/FormResponseRevision'
+        fups:
+          type: array
+          description: The response's follow-ups, as shown on one item of the docs' responses.list example. Never observed
+            on the live API on 2026-09-29, including on responses with pending follow-ups, whose follow-ups arrived on
+            the answers instead (FormResponseAnswer.fups).
+          items:
+            $ref: '#/components/schemas/ResponseFollowup'
+      additionalProperties: true
+      required:
+      - id
+      - created
+      - updated
+    FormResponseRevision:
+      description: The latest revision of a form response, sent by responses.info and by responses.list when the request
+        sets latest to true.
+      type: object
+      properties:
+        m_completer_id:
+          type: string
+        m_submitter_id:
+          type: string
+        started_on:
+          type: integer
+        submitted_on:
+          type: integer
+        received_on:
+          type: integer
+        version:
+          type: integer
+        form_version:
+          type: integer
+        location:
+          description: Null when the response carries no location. The docs example shows an object; null was observed
+            on the live API on 2026-09-29.
+          oneOf:
+          - $ref: '#/components/schemas/ResponseLocation'
+          - type: 'null'
+        weather:
+          $ref: '#/components/schemas/ResponseWeather'
+        responses:
+          type: object
+          description: The answers, keyed by the form's field ids.
+          properties: {}
+          additionalProperties:
+            $ref: '#/components/schemas/FormResponseAnswer'
+        fups:
+          type: array
+          description: Shown in the docs' responses.info example. Never observed on the live API on 2026-09-29, including
+            on responses with pending follow-ups, whose follow-ups arrived on the answers instead (FormResponseAnswer.fups).
+          items:
+            $ref: '#/components/schemas/ResponseFollowup'
+      additionalProperties: true
+      required:
+      - m_completer_id
+      - m_submitter_id
+      - started_on
+      - submitted_on
+      - received_on
+      - version
+      - form_version
+      - location
+      - weather
+      - responses
+    ResponseLocation:
+      type: object
+      properties:
+        lon:
+          type: number
+        lat:
+          type: number
+        accuracy:
+          type: number
+      additionalProperties: true
+      required:
+      - lon
+      - lat
+      - accuracy
+    ResponseWeather:
+      description: Every property is optional because the live API sent an empty weather object on some responses on
+        2026-09-29.
+      type: object
+      properties:
+        temperature:
+          type: number
+        icon:
+          type: string
+          description: 'Values in the docs examples: wind, rain. Not an enum.'
+        windSpeed:
+          type: number
+      additionalProperties: true
+    FormResponseAnswer:
+      description: One answer of a form response. The shape of value depends on the field type, so it is left untyped.
+      type: object
+      properties:
+        value: {}
+        attachments:
+          type: array
+          description: The docs examples show an empty array on every answer; the live API sent it on only some answers
+            on 2026-09-29.
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              caption:
+                type: string
+            additionalProperties: true
+            required:
+            - key
+        fups:
+          type: array
+          description: The follow-ups raised on this answer. Sent only on answers that have one.
+          items:
+            $ref: '#/components/schemas/ResponseFollowup'
+      additionalProperties: true
+      required:
+      - value
+    ResponseFollowup:
+      description: A follow-up embedded in a form response. It mirrors Followup, but the live API serializes it differently
+        (integer timestamps, an integer followup_display_id), so it is a schema of its own.
+      type: object
+      properties:
+        id:
+          type: string
+        open:
+          type: boolean
+        due:
+          type:
+          - integer
+          - 'null'
+          description: Null when the follow-up has no due date.
+        created_on:
+          type: integer
+        updated_on:
+          type: integer
+        resolved_on:
+          oneOf:
+          - type: string
+          - type: integer
+          - type: 'null'
+          description: Null while the follow-up is open. Only null was observed on the live API on 2026-09-29, so the
+            type of a resolved follow-up's value follows Followup.resolved_on.
+        m_observer_id:
+          type: string
+        m_assigner_id:
+          type: string
+        m_assignee_id:
+          type: string
+        m_completer_id:
+          type:
+          - string
+          - 'null'
+          description: Null while the follow-up is open.
+        followup_display_id:
+          type: integer
+          description: The Follow-Up ID shown to users in Flex. Sent only when the request sets followup_display_id to true.
+            An integer here, as in the docs example, although followups.list sends it as a string.
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/FollowupMessage'
+      additionalProperties: true
+      required:
+      - id
+      - open
+      - due
+      - created_on
+      - updated_on
+      - resolved_on
+      - m_observer_id
+      - m_assigner_id
+      - m_assignee_id
+      - m_completer_id
+      - messages
+    Role:
+      description: Only the identity fields are required until more records of this schema have been observed on the
+        live API.
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+      additionalProperties: true
+      required:
+      - name
+      - id
+    TrainingCompletionStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+        date_number:
+          type: integer
+        expiresOn:
+          type:
+          - integer
+          - 'null'
+        startsExpiringOn:
+          type:
+          - integer
+          - 'null'
+        is_required:
+          type: boolean
+          description: Sent only when the request sets include_all_completions to true.
+      additionalProperties: true
+    TrainingEmployeeStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - incomplete
+          - expiring
+          - active
+          - unassigned
+        m_user_id:
+          type: string
+        percent_complete:
+          type: number
+        incomplete_training_ids:
+          type: array
+          items:
+            type: integer
+        complete_training_ids:
+          type: array
+          items:
+            type: integer
+        last_completed:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrainingCompletionStatus'
+      additionalProperties: true
+      required:
+      - status
+      - m_user_id
+      - percent_complete
+      - incomplete_training_ids
+      - complete_training_ids
+      - last_completed
+    Training:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        created:
+          type: integer
+        lesson_id:
+          type:
+          - integer
+          - 'null'
+        included_trainings_id:
+          type: array
+          items:
+            type: integer
+        schedule_type:
+          type: string
+          description: 'Values in the docs example: rolling, window. Not an enum.'
+        renewal_months:
+          type:
+          - integer
+          - 'null'
+        certificate_text:
+          type: string
+        assigned_to_type:
+          type: string
+          description: 'Values in the docs example: all, limited, none. Not an enum.'
+        assigned_to_condition:
+          $ref: '#/components/schemas/TrainingAssignmentCondition'
+        is_highlighted:
+          type: boolean
+        notes:
+          type: string
+        expires_on_month:
+          type:
+          - integer
+          - 'null'
+        expires_on_day:
+          type:
+          - integer
+          - 'null'
+        expiring_days:
+          type:
+          - integer
+          - 'null'
+          description: Observed as null on the live API on 2026-09-29, although the docs example shows an integer.
+        window_open_month:
+          type:
+          - integer
+          - 'null'
+        window_open_day:
+          type:
+          - integer
+          - 'null'
+        window_close_month:
+          type:
+          - integer
+          - 'null'
+        window_close_day:
+          type:
+          - integer
+          - 'null'
+        window_last_offered_date_number:
+          type:
+          - integer
+          - 'null'
+        window_required_for_new_employees:
+          type: boolean
+      additionalProperties: true
+      required:
+      - id
+      - title
+      - created
+      - lesson_id
+      - included_trainings_id
+      - schedule_type
+      - renewal_months
+      - certificate_text
+      - assigned_to_type
+      - assigned_to_condition
+      - is_highlighted
+      - notes
+      - expires_on_month
+      - expires_on_day
+      - expiring_days
+      - window_open_month
+      - window_open_day
+      - window_close_month
+      - window_close_day
+      - window_last_offered_date_number
+      - window_required_for_new_employees
+    TrainingAssignmentCondition:
+      description: Who a training is assigned to when assigned_to_type is limited. The docs example shows an empty object
+        for the other assignment types. data is not yet observed on the live API, so it is optional and typed from the
+        docs example only.
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/TrainingAssignmentConditionData'
+      additionalProperties: true
+    TrainingAssignmentConditionData:
+      description: Typed from the docs example; never observed on the live API, so nothing is required.
+      type: object
+      properties:
+        fieldId:
+          type: string
+          description: 'The user field the condition matches on. Value in the docs example: job-title.'
+        settings:
+          type: object
+          description: The values the field must match, such as job title ids in the docs example.
+          properties:
+            values:
+              type: array
+              items:
+                type: string
+          additionalProperties: true
+      additionalProperties: true
+    User:
+      type: object
+      properties:
+        created:
+          type: integer
+        registered_on:
+          type: integer
+        terminationDate:
+          type: integer
+        hse_id:
+          type: string
+        manager_id:
+          type: string
+        supervisor_id:
+          type: string
+        mentor_id:
+          type: string
+        creator_id:
+          type: object
+          properties:
+            id:
+              type: string
+            firstname:
+              type: string
+            lastname:
+              type: string
+          additionalProperties: true
+          required:
+          - id
+          - firstname
+          - lastname
+          description: Summary of the user who created this record. An object despite the `_id` suffix.
+        fieldOffice_id:
+          type: array
+          items:
+            type: string
+        lineOfBusiness_id:
+          type: array
+          items:
+            type: string
+        clients_id:
+          type: array
+          items:
+            type: string
+        projects_id:
+          type: array
+          items:
+            type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        employeeNumber:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+        jobTitle_id:
+          type: string
+        cellPhone:
+          type: string
+        hireDate:
+          type: integer
+        sseDate:
+          type: integer
+        emergencyContact:
+          type: string
+        isDriver:
+          type: boolean
+        isRegulatedDriver:
+          type: boolean
+        role_id:
+          type: string
+        id:
+          type: string
+        metavalues:
+          type: object
+          properties: {}
+          additionalProperties: true
+        lastWebAccess:
+          type: integer
+        lastMobileAccess:
+          type: integer
+      additionalProperties: true
+      required:
+      - created
+      - fieldOffice_id
+      - lineOfBusiness_id
+      - clients_id
+      - projects_id
+      - firstname
+      - lastname
+      - employeeNumber
+      - email
+      - username
+      - isDriver
+      - isRegulatedDriver
+      - role_id
+      - id
+x-unofficial: true
+x-generated-from: https://api.novaraflex.com/docs/
+x-source-reviewed-date: '2026-09-29'
+x-novara-protocol:
+  style: JSON-RPC-style method endpoints
+  tls_minimum: '1.2'
+  token_location: JSON request body field `token`
+  http_status_behavior: Application-level success and failure responses are documented as HTTP 200.
+  rate_limit: ~80 requests/minute/customer; all tokens share the same pool; violations may cause ~60 seconds of errors.

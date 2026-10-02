@@ -1,0 +1,74 @@
+{
+  "name": "novara-flex-js",
+  "version": "0.0.0",
+  "description": "Unofficial TypeScript SDK for the Novara Flex API",
+  "keywords": [
+    "novara",
+    "novara-flex",
+    "kpa",
+    "kpa-flex",
+    "ehs",
+    "safety",
+    "sdk",
+    "api-client",
+    "typescript",
+    "unofficial"
+  ],
+  "homepage": "https://github.com/novatech-av/novara-flex-js#readme",
+  "bugs": {
+    "url": "https://github.com/novatech-av/novara-flex-js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/novatech-av/novara-flex-js.git"
+  },
+  "license": "MIT",
+  "author": "NovaTech AV LLC d/b/a The Local Bit",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "packageManager": "pnpm@12.4.1",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.live.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:live": "vitest run --config vitest.live.config.ts",
+    "test:consumer": "pnpm run clean && pnpm run build && node scripts/consumer-smoke/run.mjs",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "lint:package": "pnpm run clean && pnpm run build && publint --strict && attw --pack . --profile esm-only",
+    "format": "biome format --write .",
+    "generate": "pnpm --filter @novara-flex-js/openapi-codegen run generate",
+    "generate:check": "pnpm run generate && git diff --exit-code -- src/generated",
+    "version-packages": "changeset version && node scripts/sync-version.mjs && biome format --write package.json src/version.ts",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@biomejs/biome": "^2.5.13",
+    "@changesets/cli": "^3.0.3",
+    "@types/node": "^24.13.4",
+    "publint": "^0.3.24",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  }
+}

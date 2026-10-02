@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+#MISE description="Initialize a Git worktree for local development"
+#USAGE arg "[path]" help="Worktree path to initialize" default="."
+
+set -euo pipefail
+
+TARGET_INPUT="${usage_path:-.}"
+
+if [[ ! -d "$TARGET_INPUT" ]]; then
+  echo "Error: worktree path does not exist: $TARGET_INPUT" >&2
+  exit 1
+fi
+
+TARGET="$(cd "$TARGET_INPUT" && pwd -P)"
+
+if ! TARGET_ROOT="$(git -C "$TARGET" rev-parse --show-toplevel 2>/dev/null)"; then
+  echo "Error: target is not inside a Git worktree: $TARGET" >&2
+  exit 1
+fi
+
+TARGET_ROOT="$(cd "$TARGET_ROOT" && pwd -P)"
+
+# The primary worktree is always listed first by `git worktree list`.
+PRIMARY_WORKTREE="$(
+  git -C "$TARGET_ROOT" worktree list --porcelain |
+    awk '/^worktree / { print substr($0, 10); exit }'
+)"
+
+if [[ -z "$PRIMARY_WORKTREE" || ! -d "$PRIMARY_WORKTREE" ]]; then
+  echo "Error: could not determine the primary worktree." >&2
+  exit 1
+fi
+
+PRIMARY_WORKTREE="$(cd "$PRIMARY_WORKTREE" && pwd -P)"
+
+#
+# .env (optional)
+#
+# The SDK has no runtime configuration; `.env` only supplies the credentials
+# for the opt-in live API tests. Without it `pnpm test` still passes offline,
+# so a missing file is a warning, not an error. See `.env.example`.
+#
+
+SOURCE_ENV="$PRIMARY_WORKTREE/.env"
+TARGET_ENV="$TARGET_ROOT/.env"
+
+if [[ -e "$TARGET_ENV" ]]; then
+  echo "OK: .env already exists"
+elif [[ "$TARGET_ROOT" != "$PRIMARY_WORKTREE" && -f "$SOURCE_ENV" ]]; then
+  echo "Copying .env from primary worktree..."
+  cp "$SOURCE_ENV" "$TARGET_ENV"
+else
+  echo "Note: no .env found; live API tests will be skipped (see .env.example)."
+fi
+
+#
+# CLAUDE.local.md (optional)
+#
+# Maintainer-only notes for Claude Code, gitignored and never published.
+# Contributors without one lose nothing, so a missing file is not reported.
+#
+
+SOURCE_LOCAL_NOTES="$PRIMARY_WORKTREE/CLAUDE.local.md"
+TARGET_LOCAL_NOTES="$TARGET_ROOT/CLAUDE.local.md"
+
+if [[ -e "$TARGET_LOCAL_NOTES" ]]; then
+  echo "OK: CLAUDE.local.md already exists"
+elif [[ "$TARGET_ROOT" != "$PRIMARY_WORKTREE" && -f "$SOURCE_LOCAL_NOTES" ]]; then
+  echo "Copying CLAUDE.local.md from primary worktree..."
+  cp "$SOURCE_LOCAL_NOTES" "$TARGET_LOCAL_NOTES"
+fi
+
+#
+# Toolchain + dependencies
+#
+
+if [[ -f "$TARGET_ROOT/mise.toml" ]]; then
+  echo "Installing mise-managed tools..."
+
+  (
+    cd "$TARGET_ROOT"
+    mise install
+  )
+
+  echo "Installing pnpm dependencies..."
+
+  (
+    cd "$TARGET_ROOT"
+    mise exec -- pnpm install --frozen-lockfile
+  )
+else
+  # Useful for reviewing an older branch that predates mise.toml.
+  echo "No mise.toml in this branch; using the current pnpm from PATH."
+
+  (
+    cd "$TARGET_ROOT"
+    pnpm install --frozen-lockfile
+  )
+fi
+
+echo
+echo "Worktree ready: $TARGET_ROOT"
