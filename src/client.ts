@@ -190,6 +190,17 @@ function invalidTimeoutMessage(prefix: string): string {
 }
 
 /**
+ * `url` with every trailing `/` removed. A backward scan rather than
+ * `/\/+$/`, which backtracks quadratically on a long run of `/` that is
+ * followed by anything else.
+ */
+function trimTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") end--;
+  return url.slice(0, end);
+}
+
+/**
  * Wait `ms`, or reject with the signal's reason, unchanged, the moment
  * `signal` aborts. The timer never outlives the wait.
  */
@@ -621,7 +632,7 @@ export class NovaraFlexClient {
     this.#timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.#retry = retry;
     this.#throttle = throttle;
-    this.baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
+    this.baseUrl = trimTrailingSlashes(options.baseUrl ?? DEFAULT_BASE_URL);
     this.account = new AccountResource(this);
     this.acknowledgments = new AcknowledgmentsResource(this);
     this.api = new ApiResource(this);
