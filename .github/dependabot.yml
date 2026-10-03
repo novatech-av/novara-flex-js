@@ -1,0 +1,41 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # The root covers the whole pnpm workspace, `openapi/` included. openapi/ gets
+  # its TypeScript 5 from the override in pnpm-workspace.yaml, not from a
+  # dependency, so TypeScript updates here only move the SDK's TypeScript 7.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      major:
+        update-types:
+          - "major"
+    ignore:
+      # Tracks the Node major pinned in mise.toml; bumped by hand with it.
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
