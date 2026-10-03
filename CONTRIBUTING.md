@@ -29,6 +29,21 @@ If it is not, prefix each command with `mise exec --`, for example
 The SDK builds with the TypeScript 7 native compiler and tests with vitest 5; check new
 tooling against those versions.
 
+### Keeping the toolchain current
+
+Dependabot (`.github/dependabot.yml`) opens weekly grouped pull requests for GitHub
+Actions (updating each pinned SHA and its version comment) and for the npm dev
+dependencies. It proposes a version only after it has been published for 7 days; security
+updates are not delayed. It cannot see `mise.toml`, so:
+
+- Check the Node.js and pnpm releases from time to time, and bump `mise.toml`,
+  `packageManager` in `package.json`, and the `@types/node` major together. Dependabot
+  skips `@types/node` majors for this reason.
+- Keep the Node.js pin above the trusted-publishing minimums in
+  [docs/releasing.md](docs/releasing.md).
+- `openapi/` gets its TypeScript 5 from the override in `pnpm-workspace.yaml`. Leave that
+  override alone when updating TypeScript.
+
 ## Gates
 
 | Command                 | What it does                                                                   |
@@ -57,6 +72,7 @@ version comment.
 
 ```
 .changeset/                pending changesets (release notes and version bumps)
+.github/dependabot.yml     weekly Dependabot updates for GitHub Actions and npm
 .github/workflows/ci.yml   the offline gates and the consumer smoke test
 .github/workflows/release.yml
                            publishes a new version to npm; see docs/releasing.md
