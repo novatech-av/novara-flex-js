@@ -14,13 +14,13 @@
     "typescript",
     "unofficial"
   ],
-  "homepage": "https://github.com/novatech-av/novara-flex-js#readme",
+  "homepage": "https://github.com/thelocalbit/novara-flex-js#readme",
   "bugs": {
-    "url": "https://github.com/novatech-av/novara-flex-js/issues"
+    "url": "https://github.com/thelocalbit/novara-flex-js/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/novatech-av/novara-flex-js.git"
+    "url": "git+https://github.com/thelocalbit/novara-flex-js.git"
   },
   "license": "MIT",
   "author": "NovaTech AV LLC d/b/a The Local Bit",

@@ -133,7 +133,7 @@ first version is published by hand once (below). Afterwards, on npmjs.com, open
 
 | Field                    | Value            |
 | ------------------------ | ---------------- |
-| Organization or user     | `novatech-av`    |
+| Organization or user     | `thelocalbit`    |
 | Repository               | `novara-flex-js` |
 | Workflow filename        | `release.yml`    |
 | Environment name         | `npm`            |
@@ -143,6 +143,11 @@ npm doesn't validate these when you save them; a mistake shows up only as a
 failed publish (`ENEEDAUTH`). New trusted publishers allow only
 `npm stage publish` unless you also allow `npm publish`, which the workflow
 uses. `package.json`'s `repository.url` must keep matching the repository.
+
+npm doesn't allow editing a trusted publisher. To change one, for example after
+renaming the GitHub organization, the repository or the workflow file, delete
+it and add a new one with the new values, and update `repository.url` in the
+same change.
 
 Then, under **Settings → Publishing access**, choose **Require two-factor
 authentication and disallow tokens**. Trusted publishing keeps working, since
