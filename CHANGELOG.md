@@ -1,5 +1,11 @@
 # novara-flex-js
 
+## 0.1.2
+
+### Patch Changes
+
+- e1795d0: The package's `repository`, `homepage` and `bugs` links now point at the `thelocalbit` GitHub organization, the repository's new home. The code is unchanged.
+
 ## 0.1.1
 
 ### Patch Changes
